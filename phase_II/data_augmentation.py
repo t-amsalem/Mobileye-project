@@ -1,6 +1,5 @@
 import os
 import glob
-from typing import Tuple, Any, List
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -32,14 +31,16 @@ def load_data(dir_set: str) -> dict:
             'labels': load_tfl_data(url_label + dir_set, label_suffix)}
 
 
-def get_random_pixel(pixels: List[int]) -> Tuple[Any, Any]:
+def get_random_pixel(pixels: list) -> (int, int):
     random_p = random.choice(pixels)
     index_of_random_p = pixels.index(random_p)
 
     return random_p, index_of_random_p
 
 
-def call_write_to_bin_file(x_coords, y_coords, label_image, padded_image, data, labels, data_name):
+def call_write_to_bin_file(x_coords: list, y_coords: list, label_image: np.ndarray,
+                           padded_image: np.ndarray, data, labels, data_name: str) -> None:
+
     count = 0
     pixels_of_tfl = [p for p in zip(x_coords, y_coords) if label_image[p[0], p[1]] == 19]
     pixels_of_not_tfl = [p for p in zip(x_coords, y_coords) if label_image[p[0], p[1]] != 19]
@@ -62,43 +63,51 @@ def call_write_to_bin_file(x_coords, y_coords, label_image, padded_image, data, 
         print("NOT TFL\n")
 
 
-def darken_image(image):
+def darken_image(image: np.ndarray) -> np.ndarray:
     contrast = iaa.GammaContrast(gamma=2.0)
     contrast_image = contrast.augment_images(image)
+
     return contrast_image
 
 
-def bright_image(image):
+def bright_image(image: np.ndarray) -> np.ndarray:
     contrast = iaa.GammaContrast(gamma=0.5)
     contrast_image = contrast.augment_images(image)
+
     return contrast_image
 
 
-def add_noise(image):
+def add_noise(image: np.ndarray) -> np.ndarray:
     gaussian_noise = iaa.AdditiveGaussianNoise(10, 20)
-    noise_image = gaussian_noise.augment_image(image)
-    return noise_image
+    noised_image = gaussian_noise.augment_image(image)
+
+    return noised_image
 
 
-def write_image_to_binary_file(file_name, image, data_name):
+def write_image_to_binary_file(file_name, image: np.ndarray, data_name: str) -> None:
     image.tofile(file_name, sep="", format="%s")
+
     if data_name == 'train':
         flipped_image = np.fliplr(image)
         flipped_image.tofile(file_name, sep="", format="%s")
         plt.imshow(flipped_image)
+
         darken = darken_image(image)
         darken.tofile(file_name, sep="", format="%s")
         ia.imshow(darken)
+
         bright = bright_image(image)
         bright.tofile(file_name, sep="", format="%s")
         ia.imshow(bright)
+
         noise_image = add_noise(image)
         noise_image.tofile(file_name, sep="", format="%s")
         plt.imshow(noise_image)
 
 
-def write_label_to_binary_file(file_name, label, data_name):
+def write_label_to_binary_file(file_name, label: int, data_name: str) -> None:
     file_name.write(label.to_bytes(1, byteorder='big', signed=False))
+
     if data_name == 'train':
         file_name.write(label.to_bytes(1, byteorder='big', signed=False))
         file_name.write(label.to_bytes(1, byteorder='big', signed=False))
@@ -106,7 +115,7 @@ def write_label_to_binary_file(file_name, label, data_name):
         file_name.write(label.to_bytes(1, byteorder='big', signed=False))
 
 
-def increasing_the_data(image_path, label_path, dir_name):
+def increasing_the_data(image_path: str, label_path: str, dir_name: str) -> None:
     with open(f"dataset/{dir_name}/data.bin", "ab") as data:
         with open(f"dataset/{dir_name}/labels.bin", "ab") as labels:
             image = np.array(Image.open(image_path))
