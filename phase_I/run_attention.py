@@ -14,7 +14,7 @@ except ImportError:
     raise
 
 
-def non_max_suppression(dim, result, c_image, color):
+def non_max_suppression(dim: int, result: np.ndarray, c_image: np.ndarray, color: list) -> (list, list):
     x = []
     y = []
     image_height, image_width = result.shape[:2]
@@ -32,7 +32,7 @@ def non_max_suppression(dim, result, c_image, color):
     return x, y
 
 
-def red_picture(im_red, filter_kernel, c_image):
+def red_picture(im_red: np.ndarray, filter_kernel: np.array, c_image: np.ndarray) -> (list, list):
     grad = sg.convolve2d(im_red, filter_kernel, boundary='symm', mode='same')
     result = ndimage.maximum_filter(grad, size=5)
     x_red, y_red = non_max_suppression(14, result, c_image, [255, 0, 0])
@@ -40,7 +40,7 @@ def red_picture(im_red, filter_kernel, c_image):
     return x_red, y_red
 
 
-def green_picture(im_green, filter_kernel, c_image):
+def green_picture(im_green: np.ndarray, filter_kernel: np.array, c_image: np.ndarray) -> (list, list):
     grad = sg.convolve2d(im_green, filter_kernel, boundary='symm', mode='same')
     result = ndimage.maximum_filter(grad, size=5)
     x_green, y_green = non_max_suppression(18, result, c_image, [0, 255, 0])
@@ -48,25 +48,7 @@ def green_picture(im_green, filter_kernel, c_image):
     return x_green, y_green
 
 
-def print_picture(im_green, c_image, result, grad):
-    fig, (ax_orig, ax_mag, ax_ang) = plt.subplots(3, 1, figsize=(12, 30))
-    ax_orig.imshow(im_green)
-    ax_orig.set_title('Original')
-    ax_orig.set_axis_off()
-    ax_mag.imshow(np.absolute(grad))
-    ax_mag.set_title('Gradient magnitude')
-    ax_mag.set_axis_off()
-    ax_ang.imshow(np.absolute(result))
-    ax_ang.set_title('Gradient orientation')
-    ax_ang.set_axis_off()
-    fig.show()
-    fig, (max_mag) = plt.subplots(1, 1, figsize=(6, 15))
-    max_mag.set_axis_off()
-    max_mag.imshow(np.absolute(c_image))
-    fig.show()
-
-
-def get_kernel():
+def get_kernel() -> np.array:
     kernel = np.array([[-2 / 324, -2 / 324, -2 / 324, -2 / 324, -2 / 324, -2 / 324, -2 / 324, -2 / 324, -2 / 324, -2 / 324, -2 / 324, -2 / 324, -2 / 324, -2 / 324, -2 / 324, -2/324, -2/324, -2/324],
                        [-2 / 324, -2 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1/324, -2/324, -2/324],
                        [-2 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1 / 324, -1/324, -1/324, -2/324],
@@ -88,7 +70,7 @@ def get_kernel():
     return kernel
 
 
-def find_tfl_lights(c_image: np.ndarray, **kwargs):
+def find_tfl_lights(c_image: np.ndarray, **kwargs) -> (list, list, list, list):
     im_red = c_image[:, :, 0]
     im_green = c_image[:, :, 1]
 
@@ -99,7 +81,7 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     return x_red, y_red, x_green, y_green
 
 
-def show_image_and_gt(image, objs, fig_num=None):
+def show_image_and_gt(image, objs: list, fig_num=None) -> None:
     plt.figure(fig_num).clf()
     plt.imshow(image)
     labels = set()
@@ -114,7 +96,7 @@ def show_image_and_gt(image, objs, fig_num=None):
             plt.legend()
 
 
-def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
+def test_find_tfl_lights(image_path: str, json_path=None, fig_num=None) -> None:
     image = np.array(Image.open(image_path))
     if json_path is None:
         objects = None
